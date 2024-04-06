@@ -1,30 +1,30 @@
 ﻿using BaboonAPI.Hooks.Initializer;
+using BaboonAPI.Hooks.Tracks;
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using TootTallyCore.Utils.TootTallyGlobals;
 using TootTallyCore.Utils.TootTallyModules;
-using TootTallySettings;
-using UnityEngine;
+using TrombLoader.CustomTracks;
 
-namespace TootTally.ModuleTemplate
+namespace TootTallyDiffCalcLibs
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInDependency("TootTallyCore", BepInDependency.DependencyFlags.HardDependency)]
-    [BepInDependency("TootTallySettings", BepInDependency.DependencyFlags.HardDependency)]
     public class Plugin : BaseUnityPlugin, ITootTallyModule
     {
         public static Plugin Instance;
 
-        private const string CONFIG_NAME = "ModuleTemplate.cfg";
+        private const string CONFIG_NAME = "TootTallyDiffCalcLibs.cfg";
         private Harmony _harmony;
         public ConfigEntry<bool> ModuleConfigEnabled { get; set; }
         public bool IsConfigInitialized { get; set; }
 
-        //Change this name to whatever you want
         public string Name { get => PluginInfo.PLUGIN_NAME; set => Name = value; }
-
-        public static TootTallySettingPage settingPage;
 
         public static void LogInfo(string msg) => Instance.Logger.LogInfo(msg);
         public static void LogError(string msg) => Instance.Logger.LogError(msg);
@@ -41,44 +41,101 @@ namespace TootTally.ModuleTemplate
         private void TryInitialize()
         {
             // Bind to the TTModules Config for TootTally
-            ModuleConfigEnabled = TootTallyCore.Plugin.Instance.Config.Bind("Modules", "<insert module name here>", true, "<insert module description here>");
+            ModuleConfigEnabled = TootTallyCore.Plugin.Instance.Config.Bind("Modules", "DiffCalcLibs", true, "Library to locally calculate the difficulty of charts.");
             TootTallyModuleManager.AddModule(this);
-            TootTallySettings.Plugin.Instance.AddModuleToSettingPage(this);
         }
 
         public void LoadModule()
         {
             string configPath = Path.Combine(Paths.BepInExRootPath, "config/");
             ConfigFile config = new ConfigFile(configPath + CONFIG_NAME, true) { SaveOnConfigSet = true };
-            // Set your config here by binding them to the related ConfigEntry
-            // Example:
-            // Unlimited = config.Bind(CONFIG_FIELD, "Unlimited", DEFAULT_UNLISETTING)
-
-            settingPage = TootTallySettingsManager.AddNewPage("ModulePageName", "HeaderText", 40f, new Color(0,0,0,0));
-            if (settingPage != null) {
-                // Use TootTallySettingPage functions to add your objects to TootTallySetting
-                // Example:
-                // page.AddToggle(name, option.Unlimited);
-            }
-
-            _harmony.PatchAll(typeof(ModuleTemplatePatches));
+            _harmony.PatchAll(typeof(DiffCalcPatches));
             LogInfo($"Module loaded!");
         }
 
         public void UnloadModule()
         {
             _harmony.UnpatchSelf();
-            settingPage.Remove();
             LogInfo($"Module unloaded!");
         }
 
-        public static class ModuleTemplatePatches
+        public static class DiffCalcPatches
         {
-            // Apply your Trombone Champ patches here
-        }
+            private static CancellationTokenSource _cancellationToken;
+            private static string _lastTrackref;
 
-        // Add your ConfigEntry objects that define your configs
-        // Example:
-        // public ConfigEntry<bool> Unlimited { get; set; }
+            [HarmonyPatch(typeof(LoadController), nameof(LoadController.Start))]
+            [HarmonyPostfix]
+            public static void ProcessChartBackup()
+            {
+                //Backup
+                if (DiffCalcGlobals.selectedChart.trackRef == GlobalVariables.chosen_track_data.trackref) return;
+
+                var path = GetSongTMBPath(GlobalVariables.chosen_track_data.trackref);
+                if (path == null) return;
+                _cancellationToken?.Cancel();
+                _cancellationToken = new CancellationTokenSource();
+                Task.Run(() => ProcessChart(path, _cancellationToken), _cancellationToken.Token);
+            }
+
+
+            [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.advanceSongs))]
+            [HarmonyPostfix]
+            public static void OnSongChangeProcessChartAsync(List<SingleTrackData> ___alltrackslist, int ___songindex)
+            {
+                var trackref = ___alltrackslist[___songindex].trackref;
+                if (DiffCalcGlobals.selectedChart.trackRef == trackref || _lastTrackref == trackref)
+                {
+                    Plugin.LogInfo($"{DiffCalcGlobals.selectedChart.trackRef} - {trackref} - trackref was the same.");
+                    return;
+                }
+
+                var path = GetSongTMBPath(trackref);
+                if (path == null)
+                    return;
+                _lastTrackref = trackref;
+                _cancellationToken?.Cancel();
+                _cancellationToken = new CancellationTokenSource();
+                Task.Run(() => ProcessChart(path, _cancellationToken), _cancellationToken.Token);
+            }
+
+            [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
+            [HarmonyPostfix]
+            public static void ProcessFirstChart(List<SingleTrackData> ___alltrackslist, int ___songindex) => OnSongChangeProcessChartAsync(___alltrackslist, ___songindex);
+
+            private async static void ProcessChart(string path, CancellationTokenSource source)
+            {
+                Chart c = ChartReader.LoadChart(path);
+                if (source.IsCancellationRequested)
+                {
+                    Plugin.LogInfo($"Disposing of {c.shortName}");
+                    c.Dispose();
+                    return;
+                }
+                Plugin.LogInfo($"Song {c.shortName} processed in {c.calculationTime.TotalSeconds}s");
+                DiffCalcGlobals.selectedChart.Dispose();
+                DiffCalcGlobals.selectedChart = c;
+                DiffCalcGlobals.OnSelectedChartSetEvent?.Invoke(c);
+                _cancellationToken = null;
+                await Task.Yield();
+            }
+
+            public static string GetSongTMBPath(string trackref)
+            {
+                var track = TrackLookup.lookup(trackref);
+                if (track is CustomTrack ct)
+                {
+                    var path = ct.folderPath + "/song.tmb";
+                    if (File.Exists(path))
+                        return path;
+                }
+                else
+                {
+                    //Implement get base game chart TMB or something
+                    DiffCalcGlobals.selectedChart.trackRef = "";
+                }
+                return null;
+            }
+        }
     }
 }
