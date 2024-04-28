@@ -39,10 +39,10 @@ namespace TootTallyDiffCalcLibs
             var baseTT = CalculateBaseTT(chart.GetDynamicDiffRating(replaySpeed, percent, modifiers));
 
             float scoreTT;
-            if (percent < 0.97f)
+            if (percent < 0.95f)
                 scoreTT = ((c * Mathf.Pow((float)Math.E, b * percent)) - c) * baseTT;//y = (0.28091281 * e^6x - 0.028091281) * b
             else
-                scoreTT = FastPow(8f * percent - 6.16219355f, 5) * baseTT;
+                scoreTT = FastPow(8.7f * percent - 6.496914352f, 4) * baseTT;
 
             return scoreTT;
         }
@@ -56,10 +56,10 @@ namespace TootTallyDiffCalcLibs
             var baseTT = CalculateBaseTT(LerpDiff(diffRatings, replaySpeed));
 
             float scoreTT;
-            if (percent < 0.97f)
+            if (percent < 0.95f)
                 scoreTT = ((c * Mathf.Pow((float)Math.E, b * percent)) - c) * baseTT;//y = (0.28091281 * e^6x - 0.028091281) * b
             else
-                scoreTT = FastPow(8f * percent - 6.16219355f, 5) * baseTT;
+                scoreTT = FastPow(8.7f * percent - 6.496914352f, 4) * baseTT;
 
             return scoreTT;
         }

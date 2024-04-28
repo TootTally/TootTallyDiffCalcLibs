@@ -35,6 +35,7 @@ namespace TootTallyDiffCalcLibs
 
         public TimeSpan calculationTime;
         public int sliderCount;
+        public float songLength, songLengthMult;
 
         public void OnDeserialize()
         {
@@ -46,7 +47,7 @@ namespace TootTallyDiffCalcLibs
 
                 var newTempo = tempo * gamespeed;
                 int count = 1;
-                notesDict[i] = new List<Note>(notes.Length);
+                notesDict[i] = new List<Note>(notes.Length) { new Note(0, 0, .015f, 0, 0, 0, false) };
                 var sortedNotes = notes.OrderBy(x => x[0]).ToArray();
                 for (int j = 0; j < sortedNotes.Length; j++)
                 {
@@ -55,7 +56,7 @@ namespace TootTallyDiffCalcLibs
                         length = 0.015f;
                     bool isSlider;
                     if (i > 0)
-                        isSlider = notesDict[0][j].isSlider;
+                        isSlider = notesDict[0][j + 1].isSlider;
                     else
                         isSlider = j + 1 < sortedNotes.Length && IsSlider(sortedNotes[j], sortedNotes[j + 1]);
                     if (i == 0 && !isSlider)
@@ -66,6 +67,10 @@ namespace TootTallyDiffCalcLibs
             }
             this.sliderCount = sliderCount;
             CalcScores();
+            if (notesDict[2].Count > 2)
+                songLength = notesDict[2].Last().position - notesDict[2][1].position;
+            if (songLength < 1) songLength = 1;
+            songLengthMult = Mathf.Pow(songLength / 30f, -(float)Math.E * .2f) + .55f; //https://www.desmos.com/calculator/cji0kmmocu
 
             performances = new ChartPerformances(notesDict[0].Count, sliderCount);
 
@@ -74,7 +79,7 @@ namespace TootTallyDiffCalcLibs
             for (int i = 0; i < Utils.GAME_SPEED.Length; i++)
             {
                 performances.CalculatePerformances(i, notesDict[i]);
-                performances.CalculateAnalytics(i);
+                performances.CalculateAnalytics(i, songLengthMult);
                 performances.CalculateRatings(i);
             }
             stopwatch.Stop();
