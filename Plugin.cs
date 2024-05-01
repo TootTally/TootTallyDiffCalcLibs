@@ -72,10 +72,10 @@ namespace TootTallyDiffCalcLibs
                 if (DiffCalcGlobals.selectedChart.trackRef == GlobalVariables.chosen_track_data.trackref) return;
 
                 var path = GetSongTMBPath(GlobalVariables.chosen_track_data.trackref);
-                if (path == null) return;
                 _cancellationToken?.Cancel();
                 _cancellationToken = new CancellationTokenSource();
-                Task.Run(() => ProcessChart(path, _cancellationToken), _cancellationToken.Token);
+                var isBaseGame = path == GlobalVariables.chosen_track_data.trackref;
+                Task.Run(() => ProcessChart(path, isBaseGame, _cancellationToken), _cancellationToken.Token);
             }
 
 
@@ -91,21 +91,21 @@ namespace TootTallyDiffCalcLibs
                 }
 
                 var path = GetSongTMBPath(trackref);
-                if (path == null)
-                    return;
                 _lastTrackref = trackref;
                 _cancellationToken?.Cancel();
                 _cancellationToken = new CancellationTokenSource();
-                Task.Run(() => ProcessChart(path, _cancellationToken), _cancellationToken.Token);
+                var isBaseGame = path == trackref;
+                Task.Run(() => ProcessChart(path, isBaseGame, _cancellationToken), _cancellationToken.Token);
             }
 
             [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
             [HarmonyPostfix]
             public static void ProcessFirstChart(List<SingleTrackData> ___alltrackslist, int ___songindex) => OnSongChangeProcessChartAsync(___alltrackslist, ___songindex);
 
-            private async static void ProcessChart(string path, CancellationTokenSource source)
+            private async static void ProcessChart(string path, bool isBaseGame, CancellationTokenSource source)
             {
-                Chart c = ChartReader.LoadChart(path);
+                if (isBaseGame) Plugin.LogInfo($"Trying to get base game chart: {path}");
+                Chart c = isBaseGame ? ChartReader.LoadBaseGame(path) : ChartReader.LoadChart(path);
                 if (source.IsCancellationRequested)
                 {
                     Plugin.LogInfo($"Disposing of {c.shortName}");
@@ -125,16 +125,11 @@ namespace TootTallyDiffCalcLibs
                 var track = TrackLookup.lookup(trackref);
                 if (track is CustomTrack ct)
                 {
-                    var path = ct.folderPath + "/song.tmb";
+                    var path = $"{ct.folderPath}/song.tmb";
                     if (File.Exists(path))
                         return path;
                 }
-                else
-                {
-                    //Implement get base game chart TMB or something
-                    DiffCalcGlobals.selectedChart.trackRef = "";
-                }
-                return null;
+                return trackref;
             }
         }
     }
