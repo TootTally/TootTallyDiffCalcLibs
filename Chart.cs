@@ -29,61 +29,73 @@ namespace TootTallyDiffCalcLibs
         public int gameMaxScore;
         public Dictionary<int, int> indexToMaxScoreDict;
 
-        public List<Lyrics> lyrics;
-
         public ChartPerformances performances;
 
         public TimeSpan calculationTime;
         public int sliderCount;
         public float songLength, songLengthMult;
 
-        public void OnDeserialize()
+        public void ProcessLite()
         {
             notesDict = new Dictionary<float, List<Note>>();
-            var sliderCount = 0;
+            CreateNotes(0, 1);
+            songLengthMult = GetSongLengthMult(notesDict[0]);
+            performances = new ChartPerformances(notesDict[0].Count, sliderCount);
+            performances.Calculate(0, notesDict[0], songLengthMult);
+        }
+
+        public void Process()
+        {
+            notesDict = new Dictionary<float, List<Note>>();
             for (int i = 0; i < Utils.GAME_SPEED.Length; i++)
             {
-                var gamespeed = Utils.GAME_SPEED[i];
-
-                var newTempo = tempo * gamespeed;
-                int count = 1;
-                notesDict[i] = new List<Note>(notes.Length) { new Note(0, 0, .015f, 0, 0, 0, false) };
-                var sortedNotes = notes.OrderBy(x => x[0]).ToArray();
-                for (int j = 0; j < sortedNotes.Length; j++)
-                {
-                    float length = sortedNotes[j][1];
-                    if (length <= 0)//minLength only applies if the note is less or equal to 0 beats, else it keeps its "lower than minimum" length
-                        length = 0.015f;
-                    bool isSlider;
-                    if (i > 0)
-                        isSlider = notesDict[0][j + 1].isSlider;
-                    else
-                        isSlider = j + 1 < sortedNotes.Length && IsSlider(sortedNotes[j], sortedNotes[j + 1]);
-                    if (i == 0 && !isSlider)
-                        sliderCount++;
-                    notesDict[i].Add(new Note(count, BeatToSeconds2(sortedNotes[j][0], newTempo), BeatToSeconds2(length, newTempo), sortedNotes[j][2], sortedNotes[j][3], sortedNotes[j][4], isSlider));
-                    count++;
-                }
+                CreateNotes(i, Utils.GAME_SPEED[i]);
             }
-            this.sliderCount = sliderCount;
-            CalcScores();
-            if (notesDict[2].Count > 2)
-                songLength = notesDict[2].Last().position - notesDict[2][1].position;
-            if (songLength < 1) songLength = 1;
-            songLengthMult = Mathf.Pow(songLength / 30f, -(float)Math.E * .2f) + .55f; //https://www.desmos.com/calculator/cji0kmmocu
-
+            songLengthMult = GetSongLengthMult(notesDict[2]);
             performances = new ChartPerformances(notesDict[0].Count, sliderCount);
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
             for (int i = 0; i < Utils.GAME_SPEED.Length; i++)
             {
-                performances.CalculatePerformances(i, notesDict[i]);
-                performances.CalculateAnalytics(i, songLengthMult);
-                performances.CalculateRatings(i);
+                performances.Calculate(i, notesDict[i], songLengthMult);
             }
             stopwatch.Stop();
             calculationTime = stopwatch.Elapsed;
+            CalcScores();
+        }
+
+        private void CreateNotes(int i, float gamespeed)
+        {
+            var newTempo = tempo * gamespeed;
+            int count = 1;
+            sliderCount = 0;
+            notesDict[i] = new List<Note>(notes.Length) { new Note(0, 0, .015f, 0, 0, 0, false) };
+            var sortedNotes = notes.OrderBy(x => x[0]).ToArray();
+            for (int j = 0; j < sortedNotes.Length; j++)
+            {
+                float length = sortedNotes[j][1];
+                if (length <= 0)//minLength only applies if the note is less or equal to 0 beats, else it keeps its "lower than minimum" length
+                    length = 0.015f;
+                bool isSlider;
+                if (i > 0)
+                    isSlider = notesDict[0][j + 1].isSlider;
+                else
+                    isSlider = j + 1 < sortedNotes.Length && IsSlider(sortedNotes[j], sortedNotes[j + 1]);
+
+                if (!isSlider)
+                    sliderCount++;
+                notesDict[i].Add(new Note(count, BeatToSeconds2(sortedNotes[j][0], newTempo), BeatToSeconds2(length, newTempo), sortedNotes[j][2], sortedNotes[j][3], sortedNotes[j][4], isSlider));
+                count++;
+            }
+        }
+
+        private float GetSongLengthMult(List<Note> notes)
+        {
+            if (notes.Count > 2)
+                songLength = notes.Last().position - notes[1].position;
+            if (songLength < 1) songLength = 1;
+            return Mathf.Pow(songLength / 30f, -(float)Math.E * .2f) + .55f; //https://www.desmos.com/calculator/cji0kmmocu
         }
 
         public static float GetLength(float length) => Mathf.Clamp(length, .2f, 5f) * 8f + 10f;
@@ -160,7 +172,6 @@ namespace TootTallyDiffCalcLibs
         {
             notes = null;
             bgdata = null;
-            lyrics?.Clear();
             notesDict?.Clear();
             performances.Dispose();
             indexToMaxScoreDict?.Clear();

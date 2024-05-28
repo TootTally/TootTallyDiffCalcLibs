@@ -205,18 +205,25 @@ namespace TootTallyDiffCalcLibs
         }
         #endregion
 
-        public void CalculateAnalytics(int gamespeed, float songLengthMult = 1f)
+        public void Calculate(int speedIndex, List<Note> noteList, float songLengthMult)
         {
-            tapAnalyticsDict[gamespeed] = new DataVectorAnalytics(tapPerfDict[gamespeed], songLengthMult);
-            aimAnalyticsDict[gamespeed] = new DataVectorAnalytics(aimPerfDict[gamespeed], songLengthMult);
+            CalculatePerformances(speedIndex, noteList);
+            CalculateAnalytics(speedIndex, songLengthMult);
+            CalculateRatings(speedIndex);
+        }
+
+        public void CalculateAnalytics(int speedIndex, float songLengthMult = 1f)
+        {
+            tapAnalyticsDict[speedIndex] = new DataVectorAnalytics(tapPerfDict[speedIndex], songLengthMult);
+            aimAnalyticsDict[speedIndex] = new DataVectorAnalytics(aimPerfDict[speedIndex], songLengthMult);
         }
 
         public const float BIAS = 1.25f;
 
-        public void CalculateRatings(int gamespeed)
+        public void CalculateRatings(int speedIndex)
         {
-            var aimRating = aimRatingDict[gamespeed] = aimAnalyticsDict[gamespeed].perfWeightedAverage + 0.01f;
-            var tapRating = tapRatingDict[gamespeed] = tapAnalyticsDict[gamespeed].perfWeightedAverage + 0.01f;
+            var aimRating = aimRatingDict[speedIndex] = aimAnalyticsDict[speedIndex].perfWeightedAverage + 0.01f;
+            var tapRating = tapRatingDict[speedIndex] = tapAnalyticsDict[speedIndex].perfWeightedAverage + 0.01f;
 
             if (aimRating != 0 && tapRating != 0)
             {
@@ -226,10 +233,10 @@ namespace TootTallyDiffCalcLibs
                 var aimWeight = (aimPerc + BIAS) * AIM_WEIGHT;
                 var tapWeight = (tapPerc + BIAS) * TAP_WEIGHT;
                 var totalWeight = aimWeight + tapWeight;
-                starRatingDict[gamespeed] = ((aimRating * aimWeight) + (tapRating * tapWeight)) / totalWeight;
+                starRatingDict[speedIndex] = ((aimRating * aimWeight) + (tapRating * tapWeight)) / totalWeight;
             }
             else
-                starRatingDict[gamespeed] = 0f;
+                starRatingDict[speedIndex] = 0f;
         }
 
         public float GetDynamicAimRating(float percent, float speed) => GetDynamicSkillRating(percent, speed, sortedAimPerfDict);

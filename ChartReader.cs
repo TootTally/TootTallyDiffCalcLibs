@@ -17,7 +17,7 @@ namespace TootTallyDiffCalcLibs
         public static void AddChartToList(string path) =>
             _allChartList.Add(LoadChart(path));
 
-        public static Chart LoadBaseGame(string trackRef)
+        public static Chart ReadBaseGame(string trackRef)
         {
             var binaryFormatter = new BinaryFormatter();
             var chart = new Chart();
@@ -45,24 +45,34 @@ namespace TootTallyDiffCalcLibs
                 chart.tempo = savedLevel.tempo;
                 chart.notes = savedLevel.savedleveldata.ToArray();
             }
-            chart.OnDeserialize();
             return chart;
+        }
+        
+        public static Chart LoadBaseGame(string trackRef)
+        {
+            var chart = ReadBaseGame(trackRef);
+            chart.Process();
+            return chart;
+        }
+
+        public static Chart ReadCustomChart(string path)
+        {
+            using StreamReader reader = new StreamReader(path);
+            string json = reader.ReadToEnd();
+            return JsonConvert.DeserializeObject<Chart>(json);
         }
 
         public static Chart LoadChart(string path)
         {
-            StreamReader reader = new StreamReader(path);
-            string json = reader.ReadToEnd();
-            reader.Close();
-            Chart chart = JsonConvert.DeserializeObject<Chart>(json);
-            chart.OnDeserialize();
+            var chart = ReadCustomChart(path);
+            chart.Process();
             return chart;
         }
 
         public static Chart LoadChartFromJson(string json)
         {
             Chart chart = JsonConvert.DeserializeObject<Chart>(json);
-            chart.OnDeserialize();
+            chart.Process();
             return chart;
         }
 
