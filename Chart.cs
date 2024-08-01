@@ -28,6 +28,7 @@ namespace TootTallyDiffCalcLibs
         public int maxScore;
         public int gameMaxScore;
         public Dictionary<int, int> indexToMaxScoreDict;
+        public Dictionary<int, int> indexToNoteCountDict;
 
         public ChartPerformances performances;
 
@@ -40,6 +41,7 @@ namespace TootTallyDiffCalcLibs
             notesDict = new Dictionary<float, List<Note>>();
             CreateNotes(0, 1);
             songLengthMult = GetSongLengthMult(notesDict[0]);
+            sliderCount = GetNoteCount();
             performances = new ChartPerformances(notesDict[0].Count, sliderCount);
             performances.Calculate(0, notesDict[0], songLengthMult);
         }
@@ -52,6 +54,7 @@ namespace TootTallyDiffCalcLibs
                 CreateNotes(i, Utils.GAME_SPEED[i]);
             }
             songLengthMult = GetSongLengthMult(notesDict[2]);
+            sliderCount = GetNoteCount();
             performances = new ChartPerformances(notesDict[0].Count, sliderCount);
 
             Stopwatch stopwatch = new Stopwatch();
@@ -69,7 +72,6 @@ namespace TootTallyDiffCalcLibs
         {
             var newTempo = tempo * gamespeed;
             int count = 1;
-            sliderCount = 0;
             notesDict[i] = new List<Note>(notes.Length) { new Note(0, 0, .015f, 0, 0, 0, false) };
             var sortedNotes = notes.OrderBy(x => x[0]).ToArray();
             for (int j = 0; j < sortedNotes.Length; j++)
@@ -83,8 +85,6 @@ namespace TootTallyDiffCalcLibs
                 else
                     isSlider = j + 1 < sortedNotes.Length && IsSlider(sortedNotes[j], sortedNotes[j + 1]);
 
-                if (!isSlider)
-                    sliderCount++;
                 notesDict[i].Add(new Note(count, BeatToSeconds2(sortedNotes[j][0], newTempo), BeatToSeconds2(length, newTempo), sortedNotes[j][2], sortedNotes[j][3], sortedNotes[j][4], isSlider));
                 count++;
             }
@@ -95,7 +95,7 @@ namespace TootTallyDiffCalcLibs
             if (notes.Count > 2)
                 songLength = notes.Last().position - notes[1].position;
             if (songLength < 1) songLength = 1;
-            return Mathf.Pow(songLength / 30f, -(float)Math.E * .2f) + .55f; //https://www.desmos.com/calculator/cji0kmmocu
+            return Mathf.Pow(songLength / 15f, -(float)Math.E * .16f) + .475f; //https://www.desmos.com/calculator/cji0kmmocu
         }
 
         public static float GetLength(float length) => Mathf.Clamp(length, .2f, 5f) * 8f + 10f;
@@ -116,6 +116,7 @@ namespace TootTallyDiffCalcLibs
             maxScore = 0;
             gameMaxScore = 0;
             indexToMaxScoreDict = new Dictionary<int, int>();
+            indexToNoteCountDict = new Dictionary<int, int>();
             var noteCount = 0;
             for (int i = 0; i < notes.Length; i++)
             {
@@ -133,6 +134,7 @@ namespace TootTallyDiffCalcLibs
                 gameMaxScore += (int)Math.Floor(Math.Floor(clampedLength * 100f * 1.315f) * 10f);
                 indexToMaxScoreDict.Add(i, maxScore);
                 noteCount++;
+                indexToNoteCountDict.Add(i, noteCount);
             }
         }
 
@@ -175,6 +177,7 @@ namespace TootTallyDiffCalcLibs
             notesDict?.Clear();
             performances.Dispose();
             indexToMaxScoreDict?.Clear();
+            indexToNoteCountDict?.Clear();
         }
 
         public class LengthAccPair

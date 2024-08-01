@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace TootTallyDiffCalcLibs
@@ -33,35 +35,45 @@ namespace TootTallyDiffCalcLibs
             //y = (0.7x^2 + 12x + 0.05)/1.5
         }
 
-        //https://www.desmos.com/calculator/m8vmkvdqo8
-        public static float CalculateScoreTT(Chart chart, float replaySpeed, float percent, string[] modifiers = null)
+        public static float CalculateScoreTT(Chart chart, float replaySpeed, int hitCount, int noteCount, float percent, string[] modifiers = null) =>
+            CalculateBaseTT(chart.GetDynamicDiffRating(replaySpeed, (float)hitCount / noteCount, modifiers)) * GetMultiplier(percent);
+
+        public static float CalculateScoreTT(float[] diffRatings, float replaySpeed, float percent) =>
+            CalculateBaseTT(LerpDiff(diffRatings, replaySpeed)) * GetMultiplier(percent);
+
+        //OLD: https://www.desmos.com/calculator/6rle1shggs
+        public static readonly Dictionary<float, float> accToMultDict = new Dictionary<float, float>()
         {
-            var baseTT = CalculateBaseTT(chart.GetDynamicDiffRating(replaySpeed, percent, modifiers));
+            { 1f, 40.2f },
+            { .999f, 32.4f },
+            { .996f, 27.2f },
+            { .993f, 23.2f },
+            { .99f, 20.5f },
+            { .985f, 18.1f },
+            { .98f, 16.1f },
+            { .97f, 13.8f },
+            { .96f, 11.8f },
+            { .95f, 10.8f },
+            { .925f, 9.2f },
+            { .9f, 8.2f },
+            { .875f, 7.5f },
+            { .85f, 7f },
+            { .8f, 6f },
+            { .7f, 4f },
+            { .6f, 2.2f },
+            { .5f, 0.65f },
+            { .25f, 0.2f },
+            { 0, 0 },
+        };
 
-            float scoreTT;
-            if (percent < 0.95f)
-                scoreTT = ((c * Mathf.Pow((float)Math.E, b * percent)) - c) * baseTT;//y = (0.28091281 * e^6x - 0.028091281) * b
-            else
-                scoreTT = FastPow(8.7f * percent - 6.496914352f, 4) * baseTT;
-
-            return scoreTT;
-        }
-
-        public const float c = 0.6f;
-        public const float b = 3f;
-
-        //https://www.desmos.com/calculator/m8vmkvdqo8
-        public static float CalculateScoreTT(float[] diffRatings, float replaySpeed, float percent)
+        public static float GetMultiplier(float percent)
         {
-            var baseTT = CalculateBaseTT(LerpDiff(diffRatings, replaySpeed));
-
-            float scoreTT;
-            if (percent < 0.95f)
-                scoreTT = ((c * Mathf.Pow((float)Math.E, b * percent)) - c) * baseTT;//y = (0.28091281 * e^6x - 0.028091281) * b
-            else
-                scoreTT = FastPow(8.7f * percent - 6.496914352f, 4) * baseTT;
-
-            return scoreTT;
+            int index;
+            for (index = 1; index < accToMultDict.Count && accToMultDict.Keys.ElementAt(index) > percent; index++) ;
+            var percMax = accToMultDict.Keys.ElementAt(index);
+            var percMin = accToMultDict.Keys.ElementAt(index - 1);
+            var by = (percent - percMin) / (percMax - percMin);
+            return Lerp(accToMultDict[percMin], accToMultDict[percMax], by);
         }
 
         public static float LerpDiff(float[] diffRatings, float speed)
