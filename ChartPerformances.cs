@@ -239,8 +239,8 @@ namespace TootTallyDiffCalcLibs
                 starRatingDict[speedIndex] = 0f;
         }
 
-        public float GetDynamicAimRating(float percent, float speed) => GetDynamicSkillRating(percent, speed, aimPerfDict);
-        public float GetDynamicTapRating(float percent, float speed) => GetDynamicSkillRating(percent, speed, tapPerfDict);
+        public float GetDynamicAimRating(float percent, float speed) => GetDynamicSkillRating(percent, speed, sortedAimPerfDict);
+        public float GetDynamicTapRating(float percent, float speed) => GetDynamicSkillRating(percent, speed, sortedTapPerfDict);
 
         private float GetDynamicSkillRating(float percent, float speed, List<DataVector>[] skillRatingMatrix)
         {
@@ -276,8 +276,8 @@ namespace TootTallyDiffCalcLibs
             return analytics.perfWeightedAverage + .01f;
         }
 
-        public const float AIM_WEIGHT = 1.2f;
-        public const float TAP_WEIGHT = 1.15f;
+        public const float AIM_WEIGHT = 1.25f;
+        public const float TAP_WEIGHT = 1.12f;
 
         public static readonly float[] HDWeights = { .34f, .02f };
         public static readonly float[] FLWeights = { .55f, .02f };
@@ -360,12 +360,12 @@ namespace TootTallyDiffCalcLibs
 
         public struct DataVectorAnalytics
         {
-            public float perfMax, perfSum, perfWeightedAverage;
+            public float perfMax, perfWeightedAverage;
             public float weightSum;
 
             public DataVectorAnalytics(List<DataVector> dataVectorList, float songLengthMult)
             {
-                perfMax = perfSum = perfWeightedAverage = 0;
+                perfMax = perfWeightedAverage = 0;
                 weightSum = 1;
 
                 if (dataVectorList.Count <= 0) return;
@@ -388,9 +388,8 @@ namespace TootTallyDiffCalcLibs
                     if (dataVectorList[i].performance > perfMax)
                         perfMax = dataVectorList[i].performance;
 
-                    perfSum += (dataVectorList[i].performance + dataVectorList[i].endurance) * (dataVectorList[i].weight / weightSum);
+                    perfWeightedAverage += (dataVectorList[i].performance + dataVectorList[i].endurance) * (dataVectorList[i].weight / weightSum);
                 }
-                perfWeightedAverage = perfSum;
             }
         }
         public static float BeatToSeconds2(float beat, float bpm) => 60f / bpm * beat;
