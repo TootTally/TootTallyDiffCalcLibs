@@ -41,8 +41,8 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' == 'Release'">
-		<None Include="$(SolutionDir)README.md" Pack="true" PackagePath="\" />
-		<None Include="$(SolutionDir)thunderstore\icon.png" Pack="true" PackagePath="\" />
+		<None Include="$(ProjectDir)README.md" Pack="true" PackagePath="\" />
+		<None Include="$(ProjectDir)thunderstore\icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(TromboneTootDir) != ''">
@@ -51,12 +51,12 @@
 
 	<Target Name="ThunderstoreZip" AfterTargets="Build">
 		<Delete Files="$(OutDir)thunderstore" />
-		<Delete Files="$(SolutionDir)$(ProjectName).zip" />
+		<Delete Files="$(ProjectDir)$(ProjectName).zip" />
 		<Copy SourceFiles="thunderstore\icon.png" DestinationFolder="$(OutDir)thunderstore" />
 		<Copy SourceFiles="thunderstore\CHANGELOG.md" DestinationFolder="$(OutDir)thunderstore" />
 		<Copy SourceFiles="thunderstore\manifest.json" DestinationFolder="$(OutDir)thunderstore" />
 		<Copy SourceFiles="thunderstore\README.md" DestinationFolder="$(OutDir)thunderstore" />
 		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(OutDir)thunderstore/plugins" />
-		<ZipDirectory DestinationFile="$(SolutionDir)$(ProjectName).zip" SourceDirectory="$(OutDir)thunderstore" />
+		<ZipDirectory DestinationFile="$(ProjectDir)$(ProjectName).zip" SourceDirectory="$(OutDir)thunderstore" />
 	</Target>
 </Project>
