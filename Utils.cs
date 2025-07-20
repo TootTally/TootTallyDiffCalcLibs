@@ -36,7 +36,7 @@ namespace TootTallyDiffCalcLibs
         }
 
         public static float CalculateScoreTT(Chart chart, float replaySpeed, int hitCount, int noteCount, float percent, string[] modifiers = null) =>
-            CalculateBaseTT(chart.GetDynamicDiffRating(replaySpeed, (float)hitCount / noteCount, modifiers)) * GetMultiplier(percent, modifiers);
+            CalculateBaseTT(chart.GetDynamicDiffRating(replaySpeed, Mathf.Min(hitCount * 1.1f / noteCount, 1f), modifiers)) * GetMultiplier(percent, modifiers);
 
         public static float CalculateScoreTT(float[] diffRatings, float replaySpeed, float percent, string[] modifiers = null) =>
             CalculateBaseTT(LerpDiff(diffRatings, replaySpeed)) * GetMultiplier(percent, modifiers);
@@ -54,38 +54,38 @@ namespace TootTallyDiffCalcLibs
             { .97f, 13.8f },
             { .96f, 11.8f },
             { .95f, 10.8f },
-            { .925f, 9.2f },
-            { .9f, 8.2f },
-            { .875f, 7.5f },
-            { .85f, 7f },
-            { .8f, 6f },
-            { .7f, 4f },
-            { .6f, 2.2f },
-            { .5f, 0.65f },
-            { .25f, 0.2f },
-            { 0, 0 },
+            { .925f, 9.6f },
+            { .9f, 8.9f },
+            { .875f, 8.3f },
+            { .85f, 7.7f },
+            { .8f, 6.6f },
+            { .7f, 4.4f },
+            { .6f, 2.4f },
+            { .5f, 1.2f },
+            { .25f, 0.5f },
+            { 0, 0 }
         };
 
         public static readonly Dictionary<float, float> ezAccToMultDict = new Dictionary<float, float>()
         {
-             { 1f, 15.4f },
-             { .999f, 12.6f },
-             { .996f, 11.6f },
-             { .993f, 11f },
-             { .99f, 10.6f },
-             { .985f, 10f },
-             { .98f, 9.6f },
-             { .97f, 9f },
+             { 1f, 15.2f },
+             { .999f, 11.2f },
+             { .996f, 10.8f },
+             { .993f, 10.4f },
+             { .99f, 10f },
+             { .985f, 9.6f },
+             { .98f, 9.3f },
+             { .97f, 8.9f },
              { .96f, 8.6f },
              { .95f, 8.3f },
-             { .925f, 7.6f },
-             { .9f, 6.8f },
-             { .875f, 6.2f },
-             { .85f, 5.6f },
-             { .8f, 4.6f },
-             { .7f, 2.5f },
-             { .6f, 1.12f },
-             { .5f, .22f },
+             { .925f, 7.8f },
+             { .9f, 7.3f },
+             { .875f, 6.9f },
+             { .85f, 6.5f },
+             { .8f, 5.25f },
+             { .7f, 3.25f },
+             { .6f, 1.75f },
+             { .5f, .6f },
              { .25f, .03f },
              { 0, 0 },
         };

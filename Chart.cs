@@ -95,7 +95,7 @@ namespace TootTallyDiffCalcLibs
             if (notes.Count > 2)
                 songLength = notes.Last().position - notes[1].position;
             if (songLength < 1) songLength = 1;
-            return Mathf.Pow((songLength + 20f) / 7f, -(float)Math.E * .14f) + .675f; //https://www.desmos.com/calculator/sn1tqkq4gf
+           return Mathf.Pow((songLength + 5f) / 5f, -(float)Math.E * .3f) + .82f; //https://www.desmos.com/calculator/sn1tqkq4gf
         }
 
         public static float GetLength(float length) => Mathf.Clamp(length, .2f, 5f) * 8f + 10f;
