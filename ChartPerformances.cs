@@ -126,15 +126,15 @@ namespace TootTallyDiffCalcLibs
 
                     if (noteMoved)
                     {
-                        aimStrain += CalcAimStrain(aimDistance, weight, deltaTime);
-                        aimEndurance += CalcAimEndurance(aimDistance, weight, deltaTime);
+                        aimStrain += CalcAimStrain(aimDistance, weight, deltaTime) * velocityDebuff;
+                        aimEndurance += CalcAimEndurance(aimDistance, weight, deltaTime) * velocityDebuff;
                     }
 
                     //Tap Calc
                     var tapDelta = nextNote.position - prevNote.position;
 
-                    tapStrain += CalcTapStrain(tapDelta, weight, aimDistance);
-                    tapEndurance += CalcTapEndurance(tapDelta, weight, aimDistance);
+                    tapStrain += CalcTapStrain(tapDelta, weight, aimDistance) * velocityDebuff;
+                    tapEndurance += CalcTapEndurance(tapDelta, weight, aimDistance) * velocityDebuff;
                 }
                 aimStrain = ComputeStrain(aimStrain) / AIM_DIV;
                 tapStrain = ComputeStrain(tapStrain) / TAP_DIV;

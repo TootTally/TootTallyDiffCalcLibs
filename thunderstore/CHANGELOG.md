@@ -1,5 +1,11 @@
 #### Changelog:
 
+`v1.0.8` -> `v1.0.10`
+
+```diff
++ Updated for TTV5.2.4
+```
+
 `v1.0.6` -> `v1.0.8`
 
 ```diff
