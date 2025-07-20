@@ -1,6 +1,6 @@
 {
     "name": "TootTallyDiffCalcLibs",
-    "version_number": "1.0.10",
+    "version_number": "1.0.11",
     "website_url": "https://github.com/TootTally/TootTallyDiffCalcLibs/",
     "description": "Difficulty calculation algorithm library for TootTally",
     "dependencies": [
