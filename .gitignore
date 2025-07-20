@@ -17,3 +17,5 @@ Version.h
 Version.cpp
 *.sln
 .vs*
+.idea/
+*.zip
