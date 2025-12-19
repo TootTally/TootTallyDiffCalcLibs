@@ -1,13 +1,14 @@
 ﻿using BaboonAPI.Hooks.Initializer;
 using BaboonAPI.Hooks.Tracks;
+using BaboonAPI.Internal.BaseGame;
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using TootTallyCore.Utils.TootTallyGlobals;
 using TootTallyCore.Utils.TootTallyModules;
 using TrombLoader.CustomTracks;
 
@@ -71,11 +72,9 @@ namespace TootTallyDiffCalcLibs
                 //Backup
                 if (DiffCalcGlobals.selectedChart.trackRef == GlobalVariables.chosen_track_data.trackref) return;
 
-                var path = GetSongTMBPath(GlobalVariables.chosen_track_data.trackref);
                 _cancellationToken?.Cancel();
                 _cancellationToken = new CancellationTokenSource();
-                var isBaseGame = path == GlobalVariables.chosen_track_data.trackref;
-                Task.Run(() => ProcessChart(path, isBaseGame, _cancellationToken), _cancellationToken.Token);
+                Task.Run(() => ProcessChart(GlobalVariables.chosen_track_data.trackref, _cancellationToken), _cancellationToken.Token);
             }
 
 
@@ -90,22 +89,19 @@ namespace TootTallyDiffCalcLibs
                     return;
                 }
 
-                var path = GetSongTMBPath(trackref);
                 _lastTrackref = trackref;
                 _cancellationToken?.Cancel();
                 _cancellationToken = new CancellationTokenSource();
-                var isBaseGame = path == trackref;
-                Task.Run(() => ProcessChart(path, isBaseGame, _cancellationToken), _cancellationToken.Token);
+                Task.Run(() => ProcessChart(trackref, _cancellationToken), _cancellationToken.Token);
             }
 
             [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.Start))]
             [HarmonyPostfix]
             public static void ProcessFirstChart(List<SingleTrackData> ___alltrackslist, int ___songindex) => OnSongChangeProcessChartAsync(___alltrackslist, ___songindex);
 
-            private async static void ProcessChart(string path, bool isBaseGame, CancellationTokenSource source)
+            private async static void ProcessChart(string trackref, CancellationTokenSource source)
             {
-                if (isBaseGame) Plugin.LogInfo($"Trying to get base game chart: {path}");
-                Chart c = isBaseGame ? ChartReader.LoadBaseGame(path) : ChartReader.LoadChart(path);
+                Chart c = GetChartFromPath(trackref);
                 if (source.IsCancellationRequested)
                 {
                     Plugin.LogInfo($"Disposing of {c.shortName}");
@@ -120,16 +116,22 @@ namespace TootTallyDiffCalcLibs
                 await Task.Yield();
             }
 
-            public static string GetSongTMBPath(string trackref)
+            private static Chart GetChartFromPath(string trackref)
             {
                 var track = TrackLookup.lookup(trackref);
                 if (track is CustomTrack ct)
                 {
                     var path = $"{ct.folderPath}/song.tmb";
                     if (File.Exists(path))
-                        return path;
+                        return ChartReader.LoadChart(path);
                 }
-                return trackref;
+                if (track is BaseGameTrack bt)
+                {
+                    var folderPathField = typeof(BaseGameTrack).GetField("trackPath", BindingFlags.NonPublic | BindingFlags.Instance);
+                    var path = (string)folderPathField.GetValue(bt);
+                    return ChartReader.LoadBaseGame(trackref, path);
+                }
+                return new Chart();
             }
         }
     }

@@ -260,7 +260,7 @@ namespace TootTallyDiffCalcLibs
         {
             var index = (int)((speed - 0.5f) / .25f);
 
-            if (skillRatingMatrix[index].Count <= 1 || percent <= 0)
+            if (skillRatingMatrix == null || skillRatingMatrix[index].Count <= 1 || percent <= 0)
                 return 0;
             else if (speed % .25f == 0)
                 return CalcSkillRating(percent, skillRatingMatrix[index]);
