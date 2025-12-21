@@ -1,6 +1,6 @@
 # TootTally DiffCalcLibs
 
-> Version: 1.0.12
+> Version: 1.0.13
 
 Difficulty algorithm libs for [TootTally](https://toottally.com/).
 

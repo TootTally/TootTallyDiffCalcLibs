@@ -1,11 +1,11 @@
 {
     "name": "TootTallyDiffCalcLibs",
-    "version_number": "1.0.12",
+    "version_number": "1.0.13",
     "website_url": "https://github.com/TootTally/TootTallyDiffCalcLibs/",
     "description": "Difficulty calculation algorithm library for TootTally",
     "dependencies": [
-        "TromboneChamps-TrombLoader-2.4.1",
-        "TromboneChamps-BaboonAPI-2.9.1",
+        "TromboneChamps-TrombLoader-2.4.4",
+        "TromboneChamps-BaboonAPI-2.10.3",
         "BepInEx-BepInExPack_TromboneChamp-5.4.21"
     ]
 }
