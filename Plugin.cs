@@ -66,6 +66,7 @@ namespace TootTallyDiffCalcLibs
             private static string _lastTrackref;
 
             [HarmonyPatch(typeof(LoadController), nameof(LoadController.Start))]
+            [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.clickPlay))]
             [HarmonyPostfix]
             public static void ProcessChartBackup()
             {
