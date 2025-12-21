@@ -155,12 +155,6 @@ namespace TootTallyDiffCalcLibs
 
         public int SpeedToIndex(float speed) => (int)((Mathf.Clamp(speed, 0.5f, 2f) - 0.5f) / .25f);
 
-        public class Lyrics
-        {
-            public string bar;
-            public string text;
-        }
-
         public static float BeatToSeconds2(float beat, float bpm) => 60f / bpm * beat;
         public static bool IsSlider(float[] currNote, float[] nextNote) => currNote[0] + currNote[1] + .025f >= nextNote[0];
         public static float GetHealthDiff(float acc) => Mathf.Clamp((acc - 79f) * 0.2193f, -15f, 4.34f);

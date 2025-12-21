@@ -1,27 +1,23 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
-using UnityEngine;
-using static TootTallyCore.Utils.Helpers.SongDataHelper;
 
 namespace TootTallyDiffCalcLibs
 {
     public static class ChartReader
     {
         private static List<Chart> _allChartList = new List<Chart>();
-        private static readonly string TrackassetDir = $"{Application.streamingAssetsPath}/trackassets";
 
         public static void AddChartToList(string path) =>
             _allChartList.Add(LoadChart(path));
 
-        public static Chart ReadBaseGame(string trackRef)
+        public static Chart ReadBaseGame(string trackRef, string path)
         {
             var binaryFormatter = new BinaryFormatter();
             var chart = new Chart();
-            var metadataFilePath = $"{TrackassetDir}/{trackRef}/metadata_en.tmb";
+            var metadataFilePath = $"{path}/metadata_en.tmb";
             using (FileStream fileStream = File.Open(metadataFilePath, FileMode.Open))
             {
                 var metadata = (SavedLevelMetadata)binaryFormatter.Deserialize(fileStream);
@@ -35,7 +31,7 @@ namespace TootTallyDiffCalcLibs
                 chart.year = metadata.year;
             }
 
-            var songFilePath = $"{TrackassetDir}/{trackRef}/trackdata.tmb";
+            var songFilePath = $"{path}/trackdata.tmb";
             using (FileStream fileStream = File.Open(songFilePath, FileMode.Open))
             {
                 var savedLevel = (SavedLevel)binaryFormatter.Deserialize(fileStream);
@@ -48,9 +44,9 @@ namespace TootTallyDiffCalcLibs
             return chart;
         }
         
-        public static Chart LoadBaseGame(string trackRef)
+        public static Chart LoadBaseGame(string trackRef, string path)
         {
-            var chart = ReadBaseGame(trackRef);
+            var chart = ReadBaseGame(trackRef, path);
             chart.Process();
             return chart;
         }

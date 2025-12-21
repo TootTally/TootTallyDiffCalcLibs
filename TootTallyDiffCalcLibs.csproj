@@ -4,7 +4,7 @@
 		<TargetFramework>net48</TargetFramework>
 		<AssemblyName>TootTallyDiffCalcLibs</AssemblyName>
 		<Description>Difficulty calculation algorithm library for TootTally</Description>
-		<Version>1.0.11</Version>
+		<Version>1.0.13</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 
@@ -29,9 +29,9 @@
 		<PackageReference Include="BepInEx.Core" Version="5.*" />
 		<PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
 		<PackageReference Include="UnityEngine.Modules" Version="2019.4.40" IncludeAssets="compile" />
-		<PackageReference Include="TromboneChamp.GameLibs" Version="1.26.0" />
-		<PackageReference Include="TromboneChamp.BaboonAPI" Version="2.9.1" />
-		<PackageReference Include="TromboneChamp.TrombLoader" Version="2.4.1" />
+		<PackageReference Include="TromboneChamp.GameLibs" Version="1.29.0" />
+		<PackageReference Include="TromboneChamp.BaboonAPI" Version="2.10.3" />
+		<PackageReference Include="TromboneChamp.TrombLoader" Version="2.4.4" />
 		<PackageReference Include="TootTally.Core" Version="1.2.10" />
 		<PackageReference Include="TootTally.Settings" Version="1.1.4" />
 	</ItemGroup>

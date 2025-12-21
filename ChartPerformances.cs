@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace TootTallyDiffCalcLibs
@@ -134,7 +132,8 @@ namespace TootTallyDiffCalcLibs
                     var tapDelta = nextNote.position - prevNote.position;
 
                     tapStrain += CalcTapStrain(tapDelta, weight, aimDistance) * velocityDebuff;
-                    tapEndurance += CalcTapEndurance(tapDelta, weight, aimDistance);
+                    tapEndurance += CalcTapEndurance(tapDelta, weight, aimDistance) * velocityDebuff;
+                    lastVelocity = currVelocity;
                 }
                 aimStrain = ComputeStrain(aimStrain) / AIM_DIV;
                 tapStrain = ComputeStrain(tapStrain) / TAP_DIV;
@@ -260,7 +259,7 @@ namespace TootTallyDiffCalcLibs
         {
             var index = (int)((speed - 0.5f) / .25f);
 
-            if (skillRatingMatrix[index].Count <= 1 || percent <= 0)
+            if (skillRatingMatrix == null || skillRatingMatrix[index].Count <= 1 || percent <= 0)
                 return 0;
             else if (speed % .25f == 0)
                 return CalcSkillRating(percent, skillRatingMatrix[index]);
