@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace TootTallyDiffCalcLibs
     {
         public float[][] notes;
         public string[][] bgdata;
-        public Dictionary<float, List<Note>> notesDict;
+        public List<Note>[] notesDict;
         public List<string> note_color_start;
         public List<string> note_color_end;
         public float endpoint;
@@ -39,7 +40,7 @@ namespace TootTallyDiffCalcLibs
 
         public void ProcessLite()
         {
-            notesDict = new Dictionary<float, List<Note>>();
+            notesDict = new List<Note>[Utils.GAME_SPEED.Length];
             CreateNotes(0, 1);
             sliderCount = GetNoteCount();
             performances = new ChartPerformances(notesDict[0].Count, sliderCount);
@@ -48,7 +49,7 @@ namespace TootTallyDiffCalcLibs
 
         public void Process()
         {
-            notesDict = new Dictionary<float, List<Note>>();
+            notesDict = new List<Note>[Utils.GAME_SPEED.Length];
             for (int i = 0; i < Utils.GAME_SPEED.Length; i++)
             {
                 CreateNotes(i, Utils.GAME_SPEED[i]);
@@ -172,7 +173,8 @@ namespace TootTallyDiffCalcLibs
         {
             notes = null;
             bgdata = null;
-            notesDict?.Clear();
+            notesDict.Do(x => x.Clear());
+            notesDict = null;
             performances.Dispose();
             indexToMaxScoreDict?.Clear();
             indexToNoteCountDict?.Clear();
