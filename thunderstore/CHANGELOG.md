@@ -1,5 +1,12 @@
 #### Changelog:
 
+`v1.0.11` -> `v1.1.0`
+
+```diff
++ Updated for TTV6.0
++ Fixed some bugs where star rating wouldn't be accurate when charts arent uploaded
+```
+
 `v1.0.8` -> `v1.0.11`
 
 ```diff
