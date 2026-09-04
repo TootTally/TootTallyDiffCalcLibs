@@ -4,7 +4,7 @@
 		<TargetFramework>net48</TargetFramework>
 		<AssemblyName>TootTallyDiffCalcLibs</AssemblyName>
 		<Description>Difficulty calculation algorithm library for TootTally</Description>
-		<Version>1.0.11</Version>
+		<Version>1.1.1</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 
@@ -18,6 +18,8 @@
 		<RepositoryUrl>https://github.com/TootTally/TootTallyDiffCalcLibs/</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<DefaultLanguage>en</DefaultLanguage>
+		<TromboneChampDir>E:\SteamLibrary\steamapps\common\TromboneChamp</TromboneChampDir>
+		<TromboneTootDir>C:\Users\Sabz\AppData\Roaming\r2modmanPlus-local\TromboneChamp\profiles\Default</TromboneTootDir>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -46,7 +48,7 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="$(TromboneTootDir) != ''">
-		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(TromboneTootDir)" />
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(TromboneTootDir)\BepInEx\plugins\TootTally-TootTallyDiffCalcLibs" />
 	</Target>
 
 	<Target Name="ThunderstoreZip" AfterTargets="Build">

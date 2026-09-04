@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 
 namespace TootTallyDiffCalcLibs
 {
@@ -40,10 +41,9 @@ namespace TootTallyDiffCalcLibs
         {
             notesDict = new Dictionary<float, List<Note>>();
             CreateNotes(0, 1);
-            songLengthMult = GetSongLengthMult(notesDict[0]);
             sliderCount = GetNoteCount();
             performances = new ChartPerformances(notesDict[0].Count, sliderCount);
-            performances.Calculate(0, notesDict[0], songLengthMult);
+            performances.Calculate(0, notesDict[0]);
         }
 
         public void Process()
@@ -53,7 +53,6 @@ namespace TootTallyDiffCalcLibs
             {
                 CreateNotes(i, Utils.GAME_SPEED[i]);
             }
-            songLengthMult = GetSongLengthMult(notesDict[2]);
             sliderCount = GetNoteCount();
             performances = new ChartPerformances(notesDict[0].Count, sliderCount);
 
@@ -61,7 +60,15 @@ namespace TootTallyDiffCalcLibs
             stopwatch.Start();
             for (int i = 0; i < Utils.GAME_SPEED.Length; i++)
             {
-                performances.Calculate(i, notesDict[i], songLengthMult);
+                try
+                {
+                    performances.Calculate(i, notesDict[i]);
+                }
+                catch (Exception e)
+                {
+                    Plugin.LogError($"Something went wrong when calcing diff for {shortName} at {Utils.GAME_SPEED[i]}");
+                    Plugin.LogError($"ERROR: {e.Message}\n{e.StackTrace}");
+                }
             }
             stopwatch.Stop();
             calculationTime = stopwatch.Elapsed;
@@ -88,14 +95,6 @@ namespace TootTallyDiffCalcLibs
                 notesDict[i].Add(new Note(count, BeatToSeconds2(sortedNotes[j][0], newTempo), BeatToSeconds2(length, newTempo), sortedNotes[j][2], sortedNotes[j][3], sortedNotes[j][4], isSlider));
                 count++;
             }
-        }
-
-        private float GetSongLengthMult(List<Note> notes)
-        {
-            if (notes.Count > 2)
-                songLength = notes.Last().position - notes[1].position;
-            if (songLength < 1) songLength = 1;
-           return Mathf.Pow((songLength + 5f) / 5f, -(float)Math.E * .3f) + .82f; //https://www.desmos.com/calculator/sn1tqkq4gf
         }
 
         public static float GetLength(float length) => Mathf.Clamp(length, .2f, 5f) * 8f + 10f;
@@ -138,13 +137,11 @@ namespace TootTallyDiffCalcLibs
             }
         }
 
-        // between 0.5f to 2f
-        public float GetBaseTT(float speed) => Utils.CalculateBaseTT(GetDiffRating(Mathf.Clamp(speed, 0.5f, 2f)));
-
         //Returns the lerped star rating
         public float GetDiffRating(float speed) => performances.GetDiffRating(Mathf.Clamp(speed, 0.5f, 2f));
 
         public float GetDynamicDiffRating(float speed, float percent, string[] modifiers = null) => performances.GetDynamicDiffRating(percent, speed, modifiers);
+        public float GetDynamicTTRating(float speed, float percent, float multiplier, string[] modifiers = null) => performances.GetDynamicTTRating(percent, speed, multiplier, modifiers);
 
         public float GetLerpedStarRating(float speed) => performances.GetDiffRating(Mathf.Clamp(speed, 0.5f, 2f));
 
@@ -152,6 +149,7 @@ namespace TootTallyDiffCalcLibs
         public float GetTapPerformance(float speed) => performances.tapAnalyticsDict[SpeedToIndex(speed)].perfWeightedAverage;
 
         public float GetStarRating(float speed) => performances.starRatingDict[SpeedToIndex(speed)];
+
 
         public int SpeedToIndex(float speed) => (int)((Mathf.Clamp(speed, 0.5f, 2f) - 0.5f) / .25f);
 

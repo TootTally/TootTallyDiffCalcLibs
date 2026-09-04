@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Analytics;
 
 namespace TootTallyDiffCalcLibs
 {
@@ -27,78 +28,69 @@ namespace TootTallyDiffCalcLibs
             return (float)result;
         }
 
-        //TT for S rank (60% score)
-        //https://www.desmos.com/calculator/rhwqyp21nr
-        public static float CalculateBaseTT(float starRating)
-        {
-            return (0.5f * FastPow(starRating, 2) + (7f * starRating) + 0.05f);
-            //y = (0.7x^2 + 12x + 0.05)/1.5
-        }
-
         public static float CalculateScoreTT(Chart chart, float replaySpeed, int hitCount, int noteCount, float percent, string[] modifiers = null) =>
-            CalculateBaseTT(chart.GetDynamicDiffRating(replaySpeed, Mathf.Min(hitCount * 1.1f / noteCount, 1f), modifiers)) * GetMultiplier(percent, modifiers);
-
-        public static float CalculateScoreTT(float[] diffRatings, float replaySpeed, float percent, string[] modifiers = null) =>
-            CalculateBaseTT(LerpDiff(diffRatings, replaySpeed)) * GetMultiplier(percent, modifiers);
+            chart.GetDynamicTTRating(replaySpeed, (float)hitCount / noteCount, GetMultiplier(percent, modifiers), modifiers);
 
         //OLD: https://www.desmos.com/calculator/6rle1shggs
-        public static readonly Dictionary<float, float> accToMultDict = new Dictionary<float, float>()
+        public static readonly Dictionary<float, float> accToEZMultDict = new Dictionary<float, float>()
         {
-            { 1f, 40.2f },
-            { .999f, 32.4f },
-            { .996f, 27.2f },
-            { .993f, 23.2f },
-            { .99f, 20.5f },
-            { .985f, 18.1f },
-            { .98f, 16.1f },
-            { .97f, 13.8f },
-            { .96f, 11.8f },
-            { .95f, 10.8f },
-            { .925f, 9.6f },
-            { .9f, 8.9f },
-            { .875f, 8.3f },
-            { .85f, 7.7f },
-            { .8f, 6.6f },
-            { .7f, 4.4f },
-            { .6f, 2.4f },
-            { .5f, 1.2f },
-            { .25f, 0.5f },
-            { 0, 0 }
+            { 1f, 1f },//{ 1f, 1f },
+            { .999f, .999f },//{ .999f, .999f },
+            { .996f, .985f },//{ .996f, .98f },
+            { .993f, .98f },//{ .993f, .96f },
+            { .99f, .975f },//{ .99f, .93f },
+            { .985f, .96f },//{ .985f, .9f },
+            { .98f, .94f },//{ .98f, .875f },
+            { .97f, .9f },//{ .97f, .835f },
+            { .96f, .86f },//{ .96f, .8f },
+            { .95f, .82f },//{ .95f, .765f },
+            { .925f, .75f },//{ .925f, .7f },
+            { .9f, .69f },//{ .9f, .645f },
+            { .875f, .64f },//{ .875f, .59f },
+            { .85f, .6f },//{ .85f, .55f },
+            { .8f, .52f },//{ .8f, .55f },
+            { .7f, .39f },//{ .7f, .45f },
+            { .6f, .29f },//{ .6f, .4f },
+            { .5f, .22f },//{ .5f, .35f },
+            { .25f, .1f },//{ .25f, .2f },
+            { 0, 0 },//{ 0, 0 },
         };
 
-        public static readonly Dictionary<float, float> ezAccToMultDict = new Dictionary<float, float>()
+        public static readonly Dictionary<float, float> accToMultDict = new Dictionary<float, float>()
         {
-             { 1f, 15.2f },
-             { .999f, 11.2f },
-             { .996f, 10.8f },
-             { .993f, 10.4f },
-             { .99f, 10f },
-             { .985f, 9.6f },
-             { .98f, 9.3f },
-             { .97f, 8.9f },
-             { .96f, 8.6f },
-             { .95f, 8.3f },
-             { .925f, 7.8f },
-             { .9f, 7.3f },
-             { .875f, 6.9f },
-             { .85f, 6.5f },
-             { .8f, 5.25f },
-             { .7f, 3.25f },
-             { .6f, 1.75f },
-             { .5f, .6f },
-             { .25f, .03f },
-             { 0, 0 },
+            { 1f, 1.9f },
+            { .999f, 1.8f },
+            { .996f, 1.65f },
+            { .993f, 1.5f },
+            { .99f, 1.35f },
+            { .985f, 1.25f },
+            { .98f, 1.15f },
+            { .97f, 1f },
+            { .96f, .9f },
+            { .95f, .8f },
+            { .925f, .7f },
+            { .9f, .625f },
+            { .875f, .565f },
+            { .85f, .52f },
+            { .8f, .45f },
+            { .7f, .33f },
+            { .6f, .25f },
+            { .5f, .2f },
+            { .25f, .125f },
+            { 0, 0 },
         };
 
         public static float GetMultiplier(float percent, string[] modifiers = null)
         {
-            var multDict = (modifiers != null && modifiers.Contains("EZ")) ? ezAccToMultDict : accToMultDict;
+            var multDict = (modifiers != null && (modifiers.Contains("EZ") || modifiers.Contains("AP"))) ? accToEZMultDict : accToMultDict;
             int index;
             for (index = 1; index < multDict.Count && multDict.Keys.ElementAt(index) > percent; index++) ;
             var percMax = multDict.Keys.ElementAt(index);
             var percMin = multDict.Keys.ElementAt(index - 1);
             var by = (percent - percMin) / (percMax - percMin);
-            return Lerp(multDict[percMin], multDict[percMax], by);
+            var mult = Utils.Lerp(multDict[percMin], multDict[percMax], by);
+            var nmAPMult = (modifiers != null && modifiers.Contains("AP") && !modifiers.Contains("EZ")) ? 1.2f : 1f;
+            return mult * nmAPMult;
         }
 
         public static float LerpDiff(float[] diffRatings, float speed)
