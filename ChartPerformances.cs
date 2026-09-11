@@ -50,8 +50,8 @@ namespace TootTallyDiffCalcLibs
 
             for (int i = 0; i < Utils.GAME_SPEED.Length; i++)
             {
-                aimPerfDict[i] = new List<DataVector>(noteCount);
-                tapPerfDict[i] = new List<DataVector>(noteCount);
+                aimPerfDict[i] = new List<DataVector>(sliderCount);
+                tapPerfDict[i] = new List<DataVector>(sliderCount);
             }
             ALL_NOTE_COUNT = noteCount;
             NOTE_COUNT = sliderCount;
@@ -66,7 +66,7 @@ namespace TootTallyDiffCalcLibs
         public void CalculatePerformances(int speedIndex, List<Note> noteList)
         {
             float aimEnd = 0, aimSta = 0, tapEnd = 0, tapSta = 0;
-            for (int i = 1; i < noteList.Count; i++) //Main Forward Loop
+            for (int i = 1; i < ALL_NOTE_COUNT; i++) //Main Forward Loop
             {
                 int noteCount = 0;
                 float aimStrain = 0, tapStrain = 0;

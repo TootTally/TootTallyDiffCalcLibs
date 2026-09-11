@@ -173,7 +173,6 @@ namespace TootTallyDiffCalcLibs
         {
             notes = null;
             bgdata = null;
-            notesDict.Do(x => x.Clear());
             notesDict = null;
             performances.Dispose();
             indexToMaxScoreDict?.Clear();

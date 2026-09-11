@@ -78,8 +78,9 @@ namespace TootTallyDiffCalcLibs
                 Task.Run(() => ProcessChart(path, isBaseGame, _cancellationToken), _cancellationToken.Token);
             }
 
-
-            [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.advanceSongs))]
+            //[HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.clickRandomTrack))]
+            //[HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.advanceSongs))]
+            [HarmonyPatch(typeof(LevelSelectController), nameof(LevelSelectController.populateSongNames))]
             [HarmonyPostfix]
             public static void OnSongChangeProcessChartAsync(List<SingleTrackData> ___alltrackslist, int ___songindex)
             {
